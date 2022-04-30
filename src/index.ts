@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import { ListComponent } from './list';
 
 m.render(document.body,
-    'Hello world!');
+    m(ListComponent));
