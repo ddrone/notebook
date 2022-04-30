@@ -34,7 +34,19 @@ export class ListComponent implements m.ClassComponent {
     renderNode(item: ListNode): m.Children {
         if (item.edited) {
             return m('input', {
-                value: item.text
+                value: item.text,
+                oninput: (e: InputEvent) => {
+                    item.text = (e.target as HTMLInputElement).value;
+                },
+                onkeyup: (e: KeyboardEvent) => {
+                    if (e.key !== 'Enter') {
+                        return;
+                    }
+
+                    item.text = (e.target as HTMLInputElement).value;
+                    item.edited = false;
+                    e.preventDefault();
+                }
             });
         }
 
