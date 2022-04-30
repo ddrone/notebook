@@ -31,6 +31,25 @@ export class ListComponent implements m.ClassComponent {
         );
     }
 
+    createAfter(list: List, node: ListNode): boolean {
+        for (let i = 0; i < list.nodes.length; i++) {
+            if (list.nodes[i] === node) {
+                list.nodes.splice(i + 1, 0, {
+                    text: '',
+                    edited: true,
+                    children: null
+                });
+                return true;
+            }
+            if (list.nodes[i].children !== null && this.createAfter(
+                list.nodes[i].children, node
+            )) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     renderNode(item: ListNode): m.Children {
         if (item.edited) {
             return m('input', {
@@ -45,6 +64,7 @@ export class ListComponent implements m.ClassComponent {
 
                     item.text = (e.target as HTMLInputElement).value;
                     item.edited = false;
+                    this.createAfter(this.list, item);
                     e.preventDefault();
                 }
             });
