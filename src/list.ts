@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import { check } from './utils';
 
 interface ListNode {
     text: string;
@@ -8,6 +9,44 @@ interface ListNode {
 
 interface List {
     nodes: ListNode[];
+}
+
+interface NodeAttrs {
+    node: ListNode;
+    onEnter: () => void;
+}
+
+export class NodeComponent implements m.ClassComponent<NodeAttrs> {
+    view(vnode: m.Vnode<NodeAttrs>): m.Children {
+        const item = vnode.attrs.node;
+        if (item.edited) {
+            return m('input', {
+                value: item.text,
+                oninput: (e: InputEvent) => {
+                    item.text = (e.target as HTMLInputElement).value;
+                },
+                onkeyup: (e: KeyboardEvent) => {
+                    if (e.key !== 'Enter') {
+                        return;
+                    }
+
+                    item.text = (e.target as HTMLInputElement).value;
+                    item.edited = false;
+                    vnode.attrs.onEnter();
+                    e.preventDefault();
+                }
+            });
+        }
+
+        return item.text;
+    }
+
+    oncreate(vnode: m.VnodeDOM<NodeAttrs, this>) {
+        if (vnode.attrs.node.edited) {
+            // DOM note should be an input, focus it.
+            (vnode.dom as HTMLElement).focus();
+        }
+    }
 }
 
 export class ListComponent implements m.ClassComponent {
@@ -51,31 +90,19 @@ export class ListComponent implements m.ClassComponent {
     }
 
     renderNode(item: ListNode): m.Children {
-        if (item.edited) {
-            return m('input', {
-                value: item.text,
-                oninput: (e: InputEvent) => {
-                    item.text = (e.target as HTMLInputElement).value;
-                },
-                onkeyup: (e: KeyboardEvent) => {
-                    if (e.key !== 'Enter') {
-                        return;
-                    }
-
-                    item.text = (e.target as HTMLInputElement).value;
-                    item.edited = false;
-                    this.createAfter(this.list, item);
-                    e.preventDefault();
-                }
-            });
-        }
+        const first = m(NodeComponent, check<NodeAttrs>({
+            node: item,
+            onEnter: () => {
+                this.createAfter(this.list, item);
+            }
+        }));
 
         if (item.children == null) {
-            return item.text;
+            return first;
         }
 
         return [
-            item.text,
+            first,
             this.renderList(item.children)
         ];
     }
