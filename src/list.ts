@@ -122,6 +122,34 @@ export class ListComponent implements m.ClassComponent {
         return false;
     }
 
+    indent(list: List, needle: ListNode): boolean {
+        for (let i = 0; i < list.nodes.length; i++) {
+            if (list.nodes[i] === needle) {
+                if (i === 0) {
+                    // No previous item in the list to attach the current one, just stop.
+                    return true;
+                }
+
+                list.nodes.splice(i, 1);
+
+                const previous = list.nodes[i - 1];
+                if (previous.children === null) {
+                    previous.children = {
+                        nodes: []
+                    };
+                }
+                previous.children.nodes.push(needle);
+                return true;
+            }
+
+            else if (list.nodes[i].children !== null && this.indent(list.nodes[i].children, needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     renderNode(item: ListNode): m.Children {
         const first = m(NodeComponent, check<NodeAttrs>({
             node: item,
@@ -145,6 +173,9 @@ export class ListComponent implements m.ClassComponent {
             onTab: (e) => {
                 if (e.getModifierState("Shift")) {
                     this.dedent(item);
+                }
+                else {
+                    this.indent(this.list, item);
                 }
             }
         }));
