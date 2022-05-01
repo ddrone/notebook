@@ -56,16 +56,14 @@ export class NodeComponent implements m.ClassComponent<NodeAttrs> {
 
 export class ListComponent implements m.ClassComponent {
     list: List;
-    editedNode: ListNode;
 
     constructor() {
-        this.editedNode = {
-            text: '',
-            edited: true,
-            children: null
-        };
         this.list = {
-            nodes: [this.editedNode]
+            nodes: [{
+                text: '',
+                edited: true,
+                children: null
+            }]
         };
     }
 
