@@ -13,7 +13,7 @@ interface List {
 
 interface NodeAttrs {
     node: ListNode;
-    onEnter: () => void;
+    onEnter: (e: KeyboardEvent) => void;
 }
 
 export class NodeComponent implements m.ClassComponent<NodeAttrs> {
@@ -32,7 +32,7 @@ export class NodeComponent implements m.ClassComponent<NodeAttrs> {
 
                     item.text = (e.target as HTMLInputElement).value;
                     item.edited = false;
-                    vnode.attrs.onEnter();
+                    vnode.attrs.onEnter(e);
                     e.preventDefault();
                 }
             });
@@ -92,8 +92,22 @@ export class ListComponent implements m.ClassComponent {
     renderNode(item: ListNode): m.Children {
         const first = m(NodeComponent, check<NodeAttrs>({
             node: item,
-            onEnter: () => {
-                this.createAfter(this.list, item);
+            onEnter: (e) => {
+                if (e.getModifierState("Shift")) {
+                    if (item.children === null) {
+                        item.children = {
+                            nodes: []
+                        };
+                    }
+                    item.children.nodes.push({
+                        text: '',
+                        edited: true,
+                        children: null
+                    });
+                }
+                else {
+                    this.createAfter(this.list, item);
+                }
             }
         }));
 
