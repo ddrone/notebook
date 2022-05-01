@@ -14,6 +14,7 @@ interface List {
 interface NodeAttrs {
     node: ListNode;
     onEnter: (e: KeyboardEvent) => void;
+    onTab: (e: KeyboardEvent) => void;
 }
 
 export class NodeComponent implements m.ClassComponent<NodeAttrs> {
@@ -25,15 +26,19 @@ export class NodeComponent implements m.ClassComponent<NodeAttrs> {
                 oninput: (e: InputEvent) => {
                     item.text = (e.target as HTMLInputElement).value;
                 },
-                onkeyup: (e: KeyboardEvent) => {
-                    if (e.key !== 'Enter') {
-                        return;
+                onkeydown: (e: KeyboardEvent) => {
+                    if (e.key === 'Tab') {
+                        vnode.attrs.onTab(e);
+                        e.preventDefault();
                     }
-
-                    item.text = (e.target as HTMLInputElement).value;
-                    item.edited = false;
-                    vnode.attrs.onEnter(e);
-                    e.preventDefault();
+                },
+                onkeyup: (e: KeyboardEvent) => {
+                    if (e.key === 'Enter') {
+                        item.text = (e.target as HTMLInputElement).value;
+                        item.edited = false;
+                        vnode.attrs.onEnter(e);
+                        e.preventDefault();
+                    }
                 }
             });
         }
@@ -89,6 +94,34 @@ export class ListComponent implements m.ClassComponent {
         return false;
     }
 
+    dedent(node: ListNode) {
+        for (let i = 0; i < this.list.nodes.length; i++) {
+            if (this.list.nodes[i].children !== null && this.dedentWork(
+                this.list, i, this.list.nodes[i].children, node
+            )) {
+                return;
+            }
+        }
+    }
+
+    dedentWork(parentList: List, parentIndex: number, list: List, needle: ListNode): boolean {
+        for (let i = 0; i < list.nodes.length; i++) {
+            if (list.nodes[i] === needle) {
+                list.nodes.splice(i, 1);
+                parentList.nodes.splice(parentIndex + 1, 0, needle);
+                return true;
+            }
+
+            else if (list.nodes[i].children !== null) {
+                if (this.dedentWork(list, i, list.nodes[i].children, needle)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     renderNode(item: ListNode): m.Children {
         const first = m(NodeComponent, check<NodeAttrs>({
             node: item,
@@ -107,6 +140,11 @@ export class ListComponent implements m.ClassComponent {
                 }
                 else {
                     this.createAfter(this.list, item);
+                }
+            },
+            onTab: (e) => {
+                if (e.getModifierState("Shift")) {
+                    this.dedent(item);
                 }
             }
         }));
