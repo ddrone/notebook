@@ -43,7 +43,7 @@ export class NodeComponent implements m.ClassComponent<NodeAttrs> {
 
     oncreate(vnode: m.VnodeDOM<NodeAttrs, this>) {
         if (vnode.attrs.node.edited) {
-            // DOM note should be an input, focus it.
+            // DOM node should be an input, focus it.
             (vnode.dom as HTMLElement).focus();
         }
     }
