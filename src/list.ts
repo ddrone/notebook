@@ -54,17 +54,29 @@ export class NodeComponent implements m.ClassComponent<NodeAttrs> {
     }
 }
 
+const LOCAL_STORAGE_KEY = 'outliner-list';
+
 export class ListComponent implements m.ClassComponent {
     list: List;
 
     constructor() {
-        this.list = {
-            nodes: [{
-                text: '',
-                edited: true,
-                children: null
-            }]
-        };
+        const saved = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (saved !== null) {
+            this.list = JSON.parse(saved);
+        }
+        else {
+            this.list = {
+                nodes: [{
+                    text: '',
+                    edited: true,
+                    children: null
+                }]
+            };
+        }
+
+        window.addEventListener('beforeunload', () => {
+            window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.list));
+        });
     }
 
     renderList(list: List): m.Children {
